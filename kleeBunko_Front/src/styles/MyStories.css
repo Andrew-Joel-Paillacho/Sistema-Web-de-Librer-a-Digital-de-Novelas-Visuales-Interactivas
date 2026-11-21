@@ -1,0 +1,121 @@
+.my-stories {
+  padding: 32px 40px;
+  color: var(--color_principal_uno, #F6F3ED);
+}
+
+.my-stories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.my-stories-header h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.my-stories section {
+  margin-bottom: 32px;
+}
+
+.my-stories section h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #9aa3af;
+  margin-bottom: 12px;
+}
+
+.btn-primary {
+  background: #40E0D0;
+  color: #0D1118;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.stories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.story-card {
+  background: #161D27;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.story-card:hover {
+  transform: translateY(-2px);
+  border-color: #40E0D0;
+}
+
+.story-cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-size: cover;
+  background-position: center;
+  background-color: #0a0f14;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  font-size: 0.8rem;
+}
+
+.story-info {
+  padding: 12px;
+}
+
+.story-info h3 {
+  font-size: 1rem;
+  color: #F6F3ED;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.story-genre {
+  font-size: 0.8rem;
+  color: #9aa3af;
+  margin-bottom: 10px;
+}
+
+.story-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.story-actions button {
+  flex: 1;
+  padding: 6px 0;
+  border-radius: 6px;
+  border: 1px solid #1f2937;
+  background: transparent;
+  color: #40E0D0;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.story-actions button:hover {
+  background: #1f2937;
+}
+
+.story-actions button.danger {
+  color: #D7263D;
+}
+
+.story-actions button.danger:hover {
+  background: rgba(215, 38, 61, 0.1);
+}

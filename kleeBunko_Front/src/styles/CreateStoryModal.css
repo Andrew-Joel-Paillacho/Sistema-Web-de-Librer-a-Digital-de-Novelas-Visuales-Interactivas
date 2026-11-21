@@ -1,0 +1,85 @@
+.csm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+
+.csm-modal {
+  background: #161D27;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 24px;
+  width: 560px;
+  max-width: 92vw;
+  color: #F6F3ED;
+}
+
+.csm-modal h3 {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.csm-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.csm-option {
+  background: #0D1118;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 20px;
+  color: #F6F3ED;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+
+.csm-option:hover:not(:disabled) {
+  border-color: #40E0D0;
+}
+
+.csm-option.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.csm-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.csm-option strong {
+  display: block;
+  font-size: 1rem;
+  color: #40E0D0;
+  margin-bottom: 6px;
+}
+
+.csm-option p {
+  font-size: 0.8rem;
+  color: #9aa3af;
+}
+
+.csm-close {
+  display: block;
+  margin: 0 auto;
+  background: transparent;
+  border: 1px solid #1f2937;
+  color: #9aa3af;
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.csm-close:hover {
+  color: #F6F3ED;
+  border-color: #F6F3ED;
+}
