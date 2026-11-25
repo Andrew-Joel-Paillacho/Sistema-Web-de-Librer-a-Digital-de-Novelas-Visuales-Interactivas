@@ -5,6 +5,37 @@ import logo from "../assets/logo_kleeBunko.png";
 import { registerUser } from "./api/auth";
 import { getTopByRating } from "./api/public";
 
+const BookIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    <line x1="8" y1="7" x2="16" y2="7" />
+    <line x1="8" y1="11" x2="16" y2="11" />
+  </svg>
+);
+
+const PenIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+  </svg>
+);
+
+const BoltIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </svg>
+);
+
+const ROLE_OPTIONS = [
+  { value: 'reader',  label: 'Lector',  icon: <BookIcon />, desc: 'Explora y descubre historias' },
+  { value: 'creator', label: 'Creador', icon: <PenIcon />,  desc: 'Comparte tus propias historias' },
+  { value: 'dual',    label: 'Dual',    icon: <BoltIcon />, desc: 'Lee y crea en una sola cuenta' },
+];
+
 const Register = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +50,7 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "reader",
     terminos: false,
   });
 
@@ -69,6 +101,7 @@ const Register = () => {
         email: form.email,
         password: form.password,
         confirmPassword: form.confirmPassword,
+        role: form.role,
       });
 
       setSuccess(data.message || "Registro exitoso. Revisa tu correo.");
@@ -212,6 +245,24 @@ const Register = () => {
                 placeholder="Ingresa tu correo"
                 required
               />
+            </div>
+
+            <div className="form-group">
+              <label>Tipo de cuenta</label>
+              <div className="role-selector">
+                {ROLE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`role-option ${form.role === opt.value ? 'selected' : ''}`}
+                    onClick={() => setForm({ ...form, role: opt.value })}
+                  >
+                    <span className="role-option-icon">{opt.icon}</span>
+                    <span className="role-option-label">{opt.label}</span>
+                    <span className="role-option-desc">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="form-group">

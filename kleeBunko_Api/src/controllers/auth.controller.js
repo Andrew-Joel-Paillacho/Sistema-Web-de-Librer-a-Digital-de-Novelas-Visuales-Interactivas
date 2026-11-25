@@ -1,6 +1,8 @@
 import { supabaseAdmin, supabase, createAuthClient } from '../config/supabase.js';
 import jwt from 'jsonwebtoken';
 
+const VALID_ROLES = ['reader', 'creator', 'dual'];
+
 // Helper para generar JWT con tipo
 const generarToken = (payload, tipo, expiresIn = '7d') => {
   return jwt.sign({ ...payload, tipo }, process.env.JWT_SECRET, { expiresIn });
@@ -21,10 +23,13 @@ const parseIdentifier = (raw) => {
 
 // REGISTRO
 export const register = async (req, res) => {
-  const { nombre, username, email, password, confirmPassword } = req.body;
+  const { nombre, username, email, password, confirmPassword, role } = req.body;
 
   if (!nombre || !username || !email || !password || !confirmPassword) {
     return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+  }
+  if (!VALID_ROLES.includes(role)) {
+    return res.status(400).json({ error: 'Debes seleccionar un tipo de cuenta válido (reader/creator/dual)' });
   }
   if (password !== confirmPassword) {
     return res.status(400).json({ error: 'Las contraseñas no coinciden' });
@@ -58,7 +63,8 @@ export const register = async (req, res) => {
       options: {
         data: {
           nombre,
-          username
+          username,
+          role
         },
         emailRedirectTo: 'http://localhost:5173/login'
       }
@@ -72,7 +78,21 @@ export const register = async (req, res) => {
     }
 
     if (data.user && data.user.identities && data.user.identities.length === 0) {
-       return res.status(400).json({ error: 'El correo ya está registrado' });
+      return res.status(400).json({ error: 'El correo ya está registrado' });
+    }
+
+
+    // === NUEVO: persistir el rol en profiles ===
+    if (data.user) {
+      // Le ponemos el rol elegido:
+      const { error: roleError } = await supabaseAdmin
+        .from('profiles')
+        .update({ role, nombre, username })
+        .eq('id', data.user.id);
+
+      if (roleError) {
+        console.error('Error al guardar rol en profiles:', roleError);
+      }
     }
 
     res.status(201).json({
@@ -214,15 +234,42 @@ export const login = async (req, res) => {
 
     if (maybeAdmin) {
       return res.status(403).json({
-        error: 'Debes usar el prefijo admin.master. o admin.common. para iniciar sesión como administrador',
+        error: 'Debes usar el prefijo de administrador para iniciar sesión como administrador',
       });
     }
 
+    // === NUEVO: leer rol real desde profiles ===
+    const { data: profile, error: profileFetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('role, nombre, username, email')
+      .eq('id', authData.user.id)
+      .maybeSingle();
+
+    if (profileFetchError) {
+      console.error('Error leyendo profile:', profileFetchError);
+      return res.status(500).json({ error: 'Error interno del servidor' });
+    }
+
+    const userRole =
+      profile?.role ||
+      authData.user.user_metadata?.role ||
+      'reader';
+
+    const userPayload = {
+      id: authData.user.id,
+      email: profile?.email || authData.user.email,
+      nombre: profile?.nombre || authData.user.user_metadata?.nombre,
+      username: profile?.username || authData.user.user_metadata?.username,
+      role: userRole,
+      isAdmin: false,
+    };
+    
     const token = jwt.sign(
       {
         userId: authData.user.id,
         email: authData.user.email,
         username: authData.user.user_metadata?.username,
+        role: userRole,
       },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
@@ -231,13 +278,7 @@ export const login = async (req, res) => {
     return res.json({
       message: 'Login exitoso',
       token,
-      user: {
-        id: authData.user.id,
-        email: authData.user.email,
-        nombre: authData.user.user_metadata?.nombre,
-        username: authData.user.user_metadata?.username,
-        isAdmin: false,
-      },
+      user: userPayload,
     });
   } catch (error) {
     console.error(error);

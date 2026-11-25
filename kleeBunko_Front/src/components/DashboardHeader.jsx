@@ -3,14 +3,25 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo_kleeBunko.png';
 import { logoutUser } from '../pages/api/auth';
 
-const NAV_ITEMS = [
+const NAV_READER = [
   { to: '/dashboard',            label: 'Inicio' },
   { to: '/dashboard/biblioteca', label: 'Biblioteca' },
   { to: '/dashboard/comunidad',  label: 'Comunidad' },
-  { to: '/dashboard/crear',      label: 'Crear' },
+];
+const NAV_CREATOR = [
+  { to: '/dashboard/crear',        label: 'Mis Historias' },
+  { to: '/dashboard/crear/editor', label: 'Crear' },
 ];
 
-const DashboardHeader = ({ onSearch, onFilter, searchValue = '', hasActiveFilters = false, activeFilterCount = 0 }) => {
+const LockIcon = ({ size = 12 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
+const DashboardHeader = ({ mode, onSearch, onFilter, searchValue = '', hasActiveFilters = false, activeFilterCount = 0, onNavClick }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [user, setUser] = useState({ nombre: '', email: '', username: '' });
   const [search, setSearch] = useState(searchValue);
@@ -18,6 +29,11 @@ const DashboardHeader = ({ onSearch, onFilter, searchValue = '', hasActiveFilter
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const userRole  = user?.role || 'reader';
+  const isDual    = userRole === 'dual';
+  const canRead   = isDual || userRole === 'reader';
+  const canCreate = isDual || userRole === 'creator';
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -73,6 +89,26 @@ const DashboardHeader = ({ onSearch, onFilter, searchValue = '', hasActiveFilter
       ? location.pathname === '/dashboard'
       : location.pathname.startsWith(to);
 
+  const effectiveMode = (() => {
+    if (userRole === 'reader')  return 'reader';
+    if (userRole === 'creator') return 'creator';
+    if (mode) return mode;
+    if (location.pathname.startsWith('/dashboard/crear')) return 'creator';
+    return 'reader';
+  })();
+
+  const navItems = effectiveMode === 'reader' ? NAV_READER : NAV_CREATOR;
+
+  const handleModeSwitch = (target) => {
+    if (target === 'reader') {
+      if (canRead) navigate('/dashboard');
+      else window.alert('Esta sección es solo para lectores.\n\nNecesitas una cuenta con rol lector o dual.');
+    } else {
+      if (canCreate) navigate('/dashboard/crear');
+      else window.alert('Esta sección es solo para creadores.\n\nNecesitas una cuenta con rol creador o dual.');
+    }
+  };
+
   return (
     <header className="dashboard-header">
       <div className="header-left">
@@ -84,53 +120,79 @@ const DashboardHeader = ({ onSearch, onFilter, searchValue = '', hasActiveFilter
       </div>
 
       <nav className="dashboard-nav">
-        {NAV_ITEMS.map((item) => (
+        <div className="header-mode-switcher">
+          <button
+            type="button"
+            className={`mode-btn ${effectiveMode === 'reader' ? 'active' : ''} ${!canRead ? 'locked' : ''}`}
+            onClick={() => handleModeSwitch('reader')}
+            title={!canRead ? 'Solo disponible para cuentas lector/dual' : 'Modo lector'}
+          >
+            {!canRead && <LockIcon />} Leer
+          </button>
+          <button
+            type="button"
+            className={`mode-btn ${effectiveMode === 'creator' ? 'active' : ''} ${!canCreate ? 'locked' : ''}`}
+            onClick={() => handleModeSwitch('creator')}
+            title={!canCreate ? 'Solo disponible para cuentas creador/dual' : 'Modo creador'}
+          >
+            {!canCreate && <LockIcon />} Crear
+          </button>
+        </div>
+
+        {navItems.map((item) => (
           <Link
             key={item.to}
             to={item.to}
             className={`dash-nav-link ${isActive(item.to) ? 'active' : ''}`}
+            onClick={(e) => {
+              if (onNavClick) {
+                onNavClick(e, item.to);
+              }
+            }}
           >
             {item.label}
           </Link>
         ))}
       </nav>
 
-      <form className="header-search-bar" onSubmit={submitSearch}>
-        <div className="search-input-wrapper">
-          <svg className="search-icon" xmlns="http://www.w3.org/2000/svg"
-            width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Buscar historias..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <button
-          type="button"
-          className={`filter-btn ${hasActiveFilters ? 'active' : ''}`}
-          aria-label="Filtros"
-          onClick={clickFilter}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
-            <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
-            <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
-            <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" />
-            <line x1="17" y1="16" x2="23" y2="16" />
-          </svg>
-          {activeFilterCount > 0 && (
-            <span className="filter-badge">{activeFilterCount}</span>
-          )}
-        </button>
-      </form>
+      {effectiveMode === 'reader' && (
+        <form className="header-search-bar" onSubmit={submitSearch}>
+          <div className="search-input-wrapper">
+            <svg className="search-icon" xmlns="http://www.w3.org/2000/svg"
+              width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar historias..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button
+            type="button"
+            className={`filter-btn ${hasActiveFilters ? 'active' : ''}`}
+            aria-label="Filtros"
+            onClick={clickFilter}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
+              <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
+              <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" />
+              <line x1="17" y1="16" x2="23" y2="16" />
+            </svg>
+            {activeFilterCount > 0 && (
+              <span className="filter-badge">{activeFilterCount}</span>
+            )}
+          </button>
+        </form>
+      )}
 
       <div className="header-profile" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
         <div className="profile-avatar">{getInitials(user.nombre)}</div>

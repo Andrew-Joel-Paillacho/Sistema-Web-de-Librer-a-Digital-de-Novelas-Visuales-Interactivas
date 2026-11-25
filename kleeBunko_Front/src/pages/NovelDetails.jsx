@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react'; // <-- useMemo agregado
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'; // <-- useLocation agregado
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardFooter from '../components/DashboardFooter';
 import StarRating, { StarIcon } from '../components/StarRating'; 
@@ -41,6 +41,8 @@ const ChevronDown = ({ size = 16, open }) => (
 const NovelDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [novel, setNovel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -49,12 +51,21 @@ const NovelDetail = () => {
 
   // Estados para las reseñas
   const [reviews, setReviews] = useState([]);
-  const [myReview, setMyReview] = useState(null); // Guarda la reseña del usuario actual si existe
-  const [isEditing, setIsEditing] = useState(false); // Para saber si está editando
+  const [myReview, setMyReview] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   
   const [myRating, setMyRating] = useState(0);
   const [myReviewText, setMyReviewText] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = storedUser.role || 'reader';
+
+  useEffect(() => {
+    if (!id || id.includes('${')) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [id, navigate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,21 +116,37 @@ const NovelDetail = () => {
     setOpenClovers((prev) => ({ ...prev, [cloverId]: !prev[cloverId] }));
 
   const handleReadPetal = (clover, petal) => {
-    navigate(`/dashboard/leer/${novel.id}/read?c=${clover.id}&p=${petal.id}`);
+    navigate(
+      `/dashboard/leer/${novel.id}/read?c=${clover.id}&p=${petal.id}`,
+      { state: { from: contextMode } }
+    );
   };
 
   const handleStartReading = () => {
     const sp = novel.savedProgress;
+    const navState = { state: { from: contextMode } };
     if (sp?.clover_id) {
       const params = new URLSearchParams();
       params.set('c', sp.clover_id);
       if (sp.petal_id) params.set('p', sp.petal_id);
       if (sp.text_id) params.set('t', sp.text_id);
-      navigate(`/dashboard/leer/${novel.id}/read?${params.toString()}`);
+      navigate(`/dashboard/leer/${novel.id}/read?${params.toString()}`, navState);
     } else {
-      navigate(`/dashboard/leer/${novel.id}/read`);
+      navigate(`/dashboard/leer/${novel.id}/read`, navState);
     }
   };
+
+  const contextMode = useMemo(() => {
+    if (userRole === 'reader')  return 'reader';
+    if (userRole === 'creator') return 'creator';
+    // dual: depende de dónde vino
+    return location.state?.from || 'reader';
+  }, [userRole, location.state]);
+
+  // Ruta corregida para creadores
+  const backPath = contextMode === 'creator'
+    ? '/dashboard/crear'
+    : '/dashboard/biblioteca';
 
   // ---- Lógica de Reseñas ----
   const recalcRating = (newReviewsList) => {
@@ -142,19 +169,15 @@ const NovelDetail = () => {
       
       let updatedReviews;
       if (myReview) {
-        // Estábamos editando
         updatedReviews = reviews.map(r => r.id === savedReview.id ? savedReview : r);
         setIsEditing(false);
       } else {
-        // Era nueva
         updatedReviews = [savedReview, ...reviews];
       }
       
       setReviews(updatedReviews);
       setMyReview(savedReview);
       setNovel(prev => ({ ...prev, rating: recalcRating(updatedReviews) }));
-      
-      // Eliminamos el alert de "Reseña guardada con éxito" como pediste
     } catch (err) {
       alert('Error al guardar la reseña: ' + err.message);
     } finally {
@@ -164,10 +187,8 @@ const NovelDetail = () => {
 
   const handleDeleteReview = async () => {
     if (!window.confirm('¿Estás seguro de que quieres eliminar tu reseña?')) return;
-    
     try {
       await deleteReview(myReview.id);
-      
       const updatedReviews = reviews.filter(r => r.id !== myReview.id);
       setReviews(updatedReviews);
       setMyReview(null);
@@ -181,7 +202,7 @@ const NovelDetail = () => {
 
   const handleReportNovel = async () => {
     const reason = window.prompt('¿Por qué quieres reportar esta historia? (Obligatorio)');
-    if (reason === null) return; // Canceló
+    if (reason === null) return;
     if (reason.trim() === '') return alert('Debes escribir un motivo para reportar.');
     
     try {
@@ -207,7 +228,7 @@ const NovelDetail = () => {
 
   return (
     <div className="dashboard-container">
-      <DashboardHeader onSearch={handleSearch} onFilter={() => setFilterOpen(true)} />
+      <DashboardHeader mode={contextMode} onSearch={handleSearch} onFilter={() => setFilterOpen(true)} />
 
       <main className="dashboard-home novel-detail-main">
         {loading ? (
@@ -215,14 +236,14 @@ const NovelDetail = () => {
         ) : error || !novel ? (
           <div className="novel-detail-error">
             <p>{error || 'Historia no encontrada'}</p>
-            <Link to="/dashboard/biblioteca" className="novel-detail-btn">Volver a la biblioteca</Link>
+            <Link to={backPath} className="novel-detail-btn">Volver</Link>
           </div>
         ) : (
           <>
             {/* HEADER */}
             <section className="novel-detail-header" style={{ backgroundImage: novel.cover_url ? `url(${novel.cover_url})` : 'none' }}>
               <div className="novel-detail-header-overlay">
-                <Link to="/dashboard/biblioteca" className="novel-detail-back"><ArrowLeft /> Volver a la biblioteca</Link>
+                <Link to={backPath} className="novel-detail-back"><ArrowLeft /> {contextMode === 'creator' ? 'Volver a mis historias' : 'Volver a la biblioteca'} </Link>
                 <div className="novel-detail-header-inner">
                   <div className="novel-detail-cover">
                     {novel.cover_url ? <img src={novel.cover_url} alt={novel.title} /> : <span>Sin portada</span>}
@@ -318,7 +339,6 @@ const NovelDetail = () => {
             <section className="novel-detail-section novel-reviews-section">
               <h2 className="novel-detail-section-title">Reseñas y Comentarios</h2>
               
-              {/* FORMULARIO O TARJETA DE MI RESEÑA */}
               {(!myReview || isEditing) ? (
                 <form className="review-form" onSubmit={handleSubmitReview}>
                   <h3>{isEditing ? 'Editar mi reseña' : 'Deja tu reseña'}</h3>
@@ -388,13 +408,12 @@ const NovelDetail = () => {
                 </div>
               )}
 
-              {/* LISTA DE OTRAS RESEÑAS */}
               <div className="reviews-list">
                 {reviews.filter(item => item.id !== myReview?.id).length === 0 && !myReview ? (
                   <p className="empty-msg" style={{ marginTop: 20 }}>Aún no hay reseñas. ¡Sé el primero en opinar!</p>
                 ) : (
                   reviews
-                    .filter(item => item.id !== myReview?.id) // Ocultamos la nuestra de la lista general
+                    .filter(item => item.id !== myReview?.id)
                     .map((r) => (
                     <div key={r.id} className="review-card">
                       <div className="review-card-header">
@@ -403,8 +422,6 @@ const NovelDetail = () => {
                           <strong className="review-author">{r.profile?.nombre || 'Usuario'}</strong>
                           <span className="review-date">
                             {new Date(r.created_at).toLocaleDateString()}
-                            
-                            {/* BOTÓN DE REPORTAR RESEÑA (AQUI ES DONDE VA) */}
                             <button 
                               onClick={() => handleReportReview(r.id)} 
                               style={{ background: 'transparent', border: 'none', color: '#ef4444', fontSize: '0.7rem', cursor: 'pointer', marginLeft: '10px', textDecoration: 'underline' }}

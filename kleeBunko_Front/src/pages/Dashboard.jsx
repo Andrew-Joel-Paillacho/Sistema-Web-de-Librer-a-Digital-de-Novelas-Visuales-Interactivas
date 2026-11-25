@@ -32,7 +32,7 @@ const Top5List = ({ items }) => (
     ) : (
       <div className="top5-list">
         {items.map((n, i) => (
-          <Link key={n.id} to={`/dashboard/leer/${n.id}`} className="top5-item">
+          <Link key={n.id} to={`/dashboard/leer/${n.id}`} state={{ from: 'reader' }} className="top5-item">
             <span className="top5-number">{i + 1}</span>
             <div className="top5-info">
               <h4 className="top5-title">{n.title}</h4>

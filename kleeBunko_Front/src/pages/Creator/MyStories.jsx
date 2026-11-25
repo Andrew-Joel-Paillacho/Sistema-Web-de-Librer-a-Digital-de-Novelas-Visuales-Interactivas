@@ -45,6 +45,10 @@ const MyStories = () => {
     load();
   };
 
+  const goToDetails = (id) =>
+    navigate(`/dashboard/leer/${id}`, { state: { from: 'creator' } });
+
+
   const Card = ({ n }) => (
     <div className="story-card">
       <div
@@ -57,7 +61,7 @@ const MyStories = () => {
         <h3>{n.title || 'Sin título'}</h3>
         <p className="story-genre">{n.genre || 'Sin género'}</p>
         <div className="story-actions">
-          <button onClick={() => navigate(`/dashboard/leer/${n.id}`)}>
+          <button onClick={() => goToDetails(n.id)}>
             Ver detalles
           </button>
           <button onClick={() => navigate(`/dashboard/crear/editor/${n.id}`)}>

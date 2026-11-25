@@ -32,3 +32,15 @@ export const requireMaster = (req, res, next) => {
   }
   next();
 };
+
+export const requireRole = (...allowedRoles) => (req, res, next) => {
+  const role = req.user?.role;
+  if (!role || !allowedRoles.includes(role)) {
+    return res.status(403).json({ error: 'No tienes permisos para acceder a este recurso' });
+  }
+  next();
+};
+
+export const requireReader  = requireRole('reader', 'dual');
+export const requireCreator = requireRole('creator', 'dual');
+export const requireDual    = requireRole('dual');

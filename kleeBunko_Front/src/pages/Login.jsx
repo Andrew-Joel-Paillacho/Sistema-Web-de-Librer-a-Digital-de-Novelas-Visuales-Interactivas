@@ -5,7 +5,7 @@ import logo from "../assets/logo_kleeBunko.png";
 import { loginUser } from "./api/auth";
 import { getTopByRating } from "./api/public";
 import { genreLabel } from "../utils/genres";
-import { supabase } from "../utils/supabaseClient"; // <-- CORREGIDO AQUÍ
+import { supabase } from "../utils/supabaseClient";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -85,8 +85,6 @@ const Login = () => {
         password: form.password,
       });
 
-      console.log("RESPUESTA DEL BACKEND: ", data)
-
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -96,11 +94,13 @@ const Login = () => {
         localStorage.setItem("persistSession", false);
       }
 
-      // redireccion segu su rol
+      // REDIRECCIÓN SEGÚN EL ROL
       if (data.user?.isAdmin) {
-        navigate("/admin", {replace: true});
+        navigate("/admin", { replace: true });
+      } else if (data.user?.role === 'creator') {
+        navigate("/dashboard/crear", { replace: true }); // <-- Va a Mis Historias
       } else {
-        navigate("/dashboard", {replace: true})
+        navigate("/dashboard", { replace: true }); // <-- Lector o Dual va al Inicio
       }
     } catch (err) {
       setError(err.message);

@@ -157,10 +157,10 @@ const VisualNovelReader = () => {
     try {
       await finishNovel(novel.id);
       alert('¡Has completado la historia!');
-      navigate(`/dashboard/leer/${novel.id}`);
+      navigate(`/dashboard/leer/${novel.id}`, { state: location.state });
     } catch (e) {
       console.error(e);
-      navigate(`/dashboard/leer/${novel.id}`);
+      navigate(`/dashboard/leer/${novel.id}`, { state: location.state });
     }
   };
 
@@ -348,7 +348,7 @@ const VisualNovelReader = () => {
           </button>
 
           <button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(`/dashboard/leer/${novel.id}`, { state: location.state })}
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'transparent', border: '1px solid #374151', color: '#9ca3af', padding: '8px 0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
           >
             <ExitIcon size={14} /> Salir
