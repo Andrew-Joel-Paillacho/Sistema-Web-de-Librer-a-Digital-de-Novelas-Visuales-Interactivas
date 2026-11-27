@@ -18,7 +18,6 @@ const ForgotPassword = () => {
 
     try {
       // Enviamos el correo de recuperación.
-      // La URL a la que irá el usuario al hacer clic en el correo será /reset-password
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });

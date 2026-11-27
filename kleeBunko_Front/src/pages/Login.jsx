@@ -243,9 +243,9 @@ const Login = () => {
               {loading ? "Iniciando sesión..." : "Iniciar sesión"}
             </button>
 
-            <a href="/forgot-password" className="forgot-password">
+            <Link to="/forgot-password" className="forgot-password">
               ¿Olvidaste tu contraseña?
-            </a>
+            </Link>
           </form>
 
           <p className="register-text">

@@ -241,7 +241,7 @@ export const login = async (req, res) => {
     // === NUEVO: leer rol real desde profiles ===
     const { data: profile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
-      .select('role, nombre, username, email')
+      .select('role, nombre, username, email, klee_coins, avatar_url')
       .eq('id', authData.user.id)
       .maybeSingle();
 
@@ -261,6 +261,8 @@ export const login = async (req, res) => {
       nombre: profile?.nombre || authData.user.user_metadata?.nombre,
       username: profile?.username || authData.user.user_metadata?.username,
       role: userRole,
+      klee_coins: profile?.klee_coins ?? 0,
+      avatar_url: profile?.avatar_url || null, 
       isAdmin: false,
     };
     
@@ -300,5 +302,105 @@ export const logout = async (req, res) => {
   } catch (error) {
     console.error('Error en logout:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+// ACTUALIZAR PERFIL
+export const updateProfile = async (req, res) => {
+  const { userId } = req.user;
+  const { nombre, username, password, currentPassword, avatar_url } = req.body;
+
+  try {
+    // 1. Verificar coins
+    const { data: profile, error: fetchError } = await supabaseAdmin
+      .from('profiles').select('klee_coins, username, email').eq('id', userId).single();
+
+    if (fetchError) throw fetchError;
+    if (profile.klee_coins < 3) {
+      return res.status(400).json({ error: 'No tienes suficientes Klee Coins (necesitas 3).' });
+    }
+
+    // 2. Verificar si el nuevo username ya existe
+    if (username && username !== profile.username) {
+      const { data: existing } = await supabaseAdmin
+        .from('profiles').select('id').eq('username', username).maybeSingle();
+      if (existing) {
+        return res.status(400).json({ error: 'El nombre de usuario ya está en uso.' });
+      }
+    }
+
+    // 3. Lógica para actualizar contraseña
+    if (password) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: 'Debes ingresar tu contraseña actual para cambiarla.' });
+      }
+      if (password.length < 6) {
+        return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+      }
+
+      // Validar que la contraseña actual sea correcta
+      const authClient = createAuthClient();
+      const { error: authError } = await authClient.auth.signInWithPassword({
+        email: profile.email,
+        password: currentPassword
+      });
+
+      if (authError) {
+        return res.status(401).json({ error: 'La contraseña actual es incorrecta.' });
+      }
+
+      // Si es correcta, actualizamos la contraseña en Supabase Auth
+      const { error: updateAuthError } = await supabaseAdmin.auth.admin.updateUserById(userId, { password });
+      if (updateAuthError) throw updateAuthError;
+    }
+
+    // 4. Actualizar tabla profiles y restar coins
+    const updates = { klee_coins: profile.klee_coins - 3 };
+    if (nombre) updates.nombre = nombre;
+    if (username) updates.username = username;
+    if (avatar_url) updates.avatar_url = avatar_url;
+
+    const { error: updateError } = await supabaseAdmin
+      .from('profiles').update(updates).eq('id', userId);
+
+    if (updateError) throw updateError;
+
+    return res.json({
+      message: 'Cambios realizados correctamente. Vuelve a iniciar sesión para ver los cambios.',
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar el perfil.' });
+  }
+};
+
+// ACTUALIZAR ROL A DUAL
+export const upgradeRole = async (req, res) => {
+  const { userId } = req.user;
+  const { email, password } = req.body;
+
+  try {
+    const authClient = createAuthClient();
+    const { error: authError } = await authClient.auth.signInWithPassword({ email, password });
+    if (authError) return res.status(401).json({ error: 'Credenciales inválidas.' });
+
+    const { data: profile, error: fetchError } = await supabaseAdmin
+      .from('profiles').select('klee_coins, role').eq('id', userId).single();
+
+    if (fetchError) throw fetchError;
+    if (profile.role === 'dual') return res.status(400).json({ error: 'Ya tienes el rol dual.' });
+    if (profile.klee_coins < 3) return res.status(400).json({ error: 'No tienes suficientes Klee Coins (necesitas 3).' });
+
+    const { error: updateError } = await supabaseAdmin
+      .from('profiles').update({ role: 'dual', klee_coins: profile.klee_coins - 3 }).eq('id', userId);
+
+    if (updateError) throw updateError;
+
+    return res.json({
+      message: '¡Rol actualizado a Dual con éxito!',
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar el rol.' });
   }
 };

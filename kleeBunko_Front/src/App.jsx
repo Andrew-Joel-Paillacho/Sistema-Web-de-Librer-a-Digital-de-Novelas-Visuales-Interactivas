@@ -15,7 +15,7 @@ import AdminRoute from './components/AdminRoute'
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-
+import Settings from "./pages/Settings";
 
 function App() {
   return (
@@ -35,6 +35,8 @@ function App() {
         <Route path="/dashboard/leer/:id" element={<ProtectedRoute><NovelDetails /></ProtectedRoute>}/>
         <Route path="/dashboard/leer/:id/read" element={<ProtectedRoute><VisualNovelReader /></ProtectedRoute>}/>
         
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>}/>
+
         {/* Creator: el layout se renderiza y las hijas van DENTRO vía <Outlet /> */}
         <Route path="/dashboard/crear" element={<ProtectedRoute><CreatorNavProvider><CreatorLayout /></CreatorNavProvider></ProtectedRoute>}>
           {/* index = se muestra en /dashboard/crear (la pestaña "Mis Historias") */}

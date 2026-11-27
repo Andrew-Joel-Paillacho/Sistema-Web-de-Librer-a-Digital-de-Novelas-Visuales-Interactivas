@@ -62,3 +62,31 @@ const handleAuthError = (res) => {
     window.location.href = '/login';
   }
 };
+
+export const updateProfileApi = async (token, data) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/profile`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error);
+  return json;
+};
+
+export const upgradeRoleApi = async (token, data) => {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/upgrade-role`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error);
+  return json;
+};

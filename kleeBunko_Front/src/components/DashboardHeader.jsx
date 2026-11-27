@@ -195,7 +195,11 @@ const DashboardHeader = ({ mode, onSearch, onFilter, searchValue = '', hasActive
       )}
 
       <div className="header-profile" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-        <div className="profile-avatar">{getInitials(user.nombre)}</div>
+        {user.avatar_url ? (
+          <img src={user.avatar_url} alt="Perfil" className="profile-avatar" style={{ objectFit: 'cover' }} />
+          ) : (
+          <div className="profile-avatar">{getInitials(user.nombre)}</div>
+        )}
         <span className="profile-name">{user.nombre || 'Usuario'}</span>
         <svg className={`profile-arrow ${isDropdownOpen ? 'open' : ''}`}
           xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -218,12 +222,12 @@ const DashboardHeader = ({ mode, onSearch, onFilter, searchValue = '', hasActive
                   <circle cx="8" cy="8" r="6" />
                   <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
                 </svg>
-                150
+                {user.klee_coins ?? 0}
               </div>
             </div>
             <div className="dropdown-menu">
               <Link to="/dashboard/perfil" className="dropdown-item">Mi Perfil</Link>
-              <Link to="/dashboard/ajustes" className="dropdown-item">Ajustes</Link>
+              <Link to="/settings" className="dropdown-item">Ajustes</Link>
               <button onClick={handleLogout} className="dropdown-item logout">
                 Cerrar Sesión
               </button>
