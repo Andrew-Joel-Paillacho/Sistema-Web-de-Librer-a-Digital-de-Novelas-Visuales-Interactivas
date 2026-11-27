@@ -4,5 +4,5 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-   base:'Andrew-Joel-Paillacho/Sistema-Web-de-Librer-a-Digital-de-Novelas-Visuales-Interactivas/kleeBunko_Front/',
+   base:'/Sistema-Web-de-Librer-a-Digital-de-Novelas-Visuales-Interactivas/kleeBunko_Front/',
 })
