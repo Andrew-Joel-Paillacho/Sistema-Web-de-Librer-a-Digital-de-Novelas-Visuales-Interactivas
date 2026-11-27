@@ -1,4 +1,4 @@
-import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -19,7 +19,7 @@ import Settings from "./pages/Settings";
 
 function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
 
         <Route path="/" element={<Landing />} />
@@ -49,7 +49,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
