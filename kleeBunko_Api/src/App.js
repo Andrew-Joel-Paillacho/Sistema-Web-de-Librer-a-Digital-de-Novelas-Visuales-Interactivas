@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://andrew-joel-paillacho.github.io'],
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://andrew-joel-paillacho.github.io', 'https://kleebunko.onrender.com'],
   credentials: true
 }));
 app.use(express.json());
