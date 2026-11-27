@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./kleeBunko_Front # 👈 Nos movemos a tu carpeta del front
+        working-directory: ./kleeBunko_Front
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: 'kleeBunko_Front/package-lock.json' # 👈 Ruta al lock
+        cache-dependency-path: 'kleeBunko_Front/package-lock.json'
 
     - name: Install dependencies
       run: npm ci # (Requiere que tengas package-lock.json en el front)
@@ -41,6 +41,9 @@ jobs:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
         VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+    - name: Copiar index.html a 404.html
+      run: cp dist/index.html dist/404.html
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
